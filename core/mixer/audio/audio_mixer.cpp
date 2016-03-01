@@ -244,8 +244,12 @@ public:
 
 		audio_buffer result;
 		result.reserve(result_ps.size());
-		boost::range::transform(result_ps, std::back_inserter(result), [](double sample){return static_cast<int32_t>(sample);});		
-		
+		const int32_t min_amplitude = std::numeric_limits<int32_t>::min();
+		const int32_t max_amplitude = std::numeric_limits<int32_t>::max();
+//Modified lambda with proper clipping instead of that horrible overflow (by Chris VDB a.k.a. Elanvrt)
+		boost::range::transform(result_ps, std::back_inserter(result), [&](double sample)
+		{ return static_cast<int32_t>((sample>max_amplitude)?(sample=max_amplitude):(sample<min_amplitude)?(sample=min_amplitude):sample); });		
+
 		const int num_channels = channel_layout_.num_channels;
 		monitor_subject_ << monitor::message("/nb_channels") % num_channels;
 
